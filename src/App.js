@@ -1,6 +1,11 @@
+import { TodoItemModel } from "./model/TodoItemModel.js";
+import { TodoListModel } from "./model/TodoListModel.js";
 import { element, render } from "./view/html-util.js";
 
 export class App {
+  // 1. TodoListModelの初期化
+  #todoListModel = new TodoListModel();
+
   mount() {
     // id="js-form" の form 要素を取得する（Todo入力フォーム）
     const formElement = document.querySelector("#js-form");
@@ -14,34 +19,33 @@ export class App {
     // id="js-todo-count" の span 要素を取得する（Todo件数表示用）
     const todoItemCountElement = document.querySelector("#js-todo-count");
 
-    // Todoリスト全体をまとめる ul 要素を生成する（まだ中身は空）
-    const todoListElement = element`<ul></ul>`;
+    // 2. TodoListModelの状態が更新されたら表示を更新する
+    this.#todoListModel.onChange(() => {
+      // Todoリストをまとめる List要素
+      const todoListElement = element`<ul></ul>`;
+      // それぞれのTodoItem要素をtodoListElement以下へ追加する
+      const todoItems = this.#todoListModel.getTodoItems();
+      todoItems.forEach((item) => {
+        const todoItemElement = element`<li>${item.title}</li>`;
+        todoListElement.appendChild(todoItemElement);
+      });
+      // コンテナ要素の中身をTodoリストをまとめるList要素で上書きする
+      render(todoListElement, containerElement);
+      // アイテム数の表示を更新
+      todoItemCountElement.textContent = `Todoアイテム数: ${this.#todoListModel.getTotalCount()}`;
+    });
 
-    // 現在のTodoアイテム数を管理する変数を0で初期化する
-    let todoItemCount = 0;
-
-    // form が submit されたときの処理を登録する
+    // 3. フォームを送信したら、新しいTodoItemModelを追加する
     formElement.addEventListener("submit", (event) => {
       // フォーム送信時のデフォルト動作（ページリロード）を止める
       event.preventDefault();
-
-      // input に入力された文字列を使って li 要素を生成する
-      // element タグ関数により HTMLエスケープも自動で行われる
-      const todoItemElement = element`<li>${inputElement.value}</li>`;
-
-      // 作成した li 要素を ul（Todoリスト）に追加する
-      todoListElement.appendChild(todoItemElement);
-
-      // 表示エリア(containerElement)の中身を
-      // 現在の todoListElement（ul）で置き換える
-      render(todoListElement, containerElement);
-
-      // Todoアイテム数を1増やす
-      todoItemCount += 1;
-
-      // Todoアイテム数の表示テキストを更新する
-      todoItemCountElement.textContent = `Todoアイテム数: ${todoItemCount}`;
-
+      // 新しいTodoItemをTodoListへ追加する
+      this.#todoListModel.addTodo(
+        new TodoItemModel({
+          title: inputElement.value,
+          completed: false,
+        })
+      );
       // 入力欄を空文字にして、次の入力に備える
       inputElement.value = "";
     });
