@@ -1,6 +1,7 @@
 import { TodoItemModel } from "./model/TodoItemModel.js";
 import { TodoListModel } from "./model/TodoListModel.js";
-import { element, render } from "./view/html-util.js";
+import { TodoListView } from "./view/TodoListView.js";
+import { render } from "./view/html-util.js";
 
 export class App {
   // 1. TodoListModelの初期化
@@ -21,41 +22,19 @@ export class App {
 
     // 2. TodoListModelの状態が更新されたら表示を更新する
     this.#todoListModel.onChange(() => {
-      // Todoリストをまとめる List要素
-      const todoListElement = element`<ul></ul>`;
       // それぞれのTodoItem要素をtodoListElement以下へ追加する
       const todoItems = this.#todoListModel.getTodoItems();
-      todoItems.forEach((item) => {
-        // 完了済みならchecked属性を付け、未完了ならchecked属性を外す
-        // input要素にはchecked属性をつける
-        // 削除ボタン(x)をそれぞれ追加する
-        const todoItemElement = item.completed
-          ? element`<li><input type="checkbox" class="checkbox" checked>
-          <s>${item.title}</s>
-          <button class="delete">x</button>
-          </li>`
-          : element`<li><input type="checkbox" class="checkbox">
-          ${item.title}
-          <button class="delete">x<button>
-          </li>`;
-        // チェックボックスのトグル処理はの変更なし
-        const inputCheckboxElement = todoItemElement.querySelector(".checkbox");
-        inputCheckboxElement.addEventListener("change", () => {
-          // 指定したTodoアイテムの完了状態を反転させる
-          this.#todoListModel.updateTodo({
-            id: item.id,
-            completed: !item.completed,
-          });
-        });
-        // 削除ボタン(X)がクリックされたときにTodoListModelからアイテムを削除する
-        const deleteButtonElement = todoItemElement.querySelector(".delete");
-        deleteButtonElement.addEventListener("click", () => {
-          this.#todoListModel.deleteTodo({
-            id: item.id,
-          });
-        });
-
-        todoListElement.appendChild(todoItemElement);
+      const todoListView = new TodoListView();
+      // todoItemに対応するTodoListViewを作成する
+      const todoListElement = todoListView.createElement(todoItems, {
+        // Todoアイテムが講師にベントを発生させたときに呼ばれる
+        onUpdateTodo: ({ id, completed }) => {
+          this.#todoListModel.updateTodo({ id, completed });
+        },
+        // Todoアイテムが削除イベントを発生させたときに呼ばれる
+        onDeleteTodo: ({ id }) => {
+          this.#todoListModel.deleteTodo({ id });
+        },
       });
       // コンテナ要素の中身をTodoリストをまとめるList要素で上書きする
       render(todoListElement, containerElement);
@@ -72,7 +51,7 @@ export class App {
         new TodoItemModel({
           title: inputElement.value,
           completed: false,
-        })
+        }),
       );
       // 入力欄を空文字にして、次の入力に備える
       inputElement.value = "";
