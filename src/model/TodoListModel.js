@@ -48,6 +48,10 @@ export class TodoListModel extends EventEmitter {
     this.emitChange();
   }
 
+  /**
+   * 指定したidのTodoItemのcompletedを更新する
+   * @param {{ id:number, completed: boolean }}
+   */
   updateTodo({ id, completed }) {
     // idが一致するTodoItemを見つけ、あるなら完了状態の値を更新
     const todoItem = this.#items.find((todo) => todo.id === id);
@@ -55,6 +59,18 @@ export class TodoListModel extends EventEmitter {
       return;
     }
     todoItem.completed = completed;
+    this.emitChange();
+  }
+
+  /**
+   * 指定したidのTodoItemを削除する
+   * @param {{ id: number }}
+   */
+  deleteTodo({ id }) {
+    // idに一致しないTodoItemだけを残すことでidに一致するTodoItemだけを削除する
+    this.#items = this.#items.filter((todo) => {
+      return todo.id !== id;
+    });
     this.emitChange();
   }
 }

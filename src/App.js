@@ -28,9 +28,17 @@ export class App {
       todoItems.forEach((item) => {
         // 完了済みならchecked属性を付け、未完了ならchecked属性を外す
         // input要素にはchecked属性をつける
+        // 削除ボタン(x)をそれぞれ追加する
         const todoItemElement = item.completed
-          ? element`<li><input type="checkbox" class="checkbox" checked><s>${item.title}</s></li>`
-          : element`<li><input type="checkbox" class="checkbox">${item.title}</li>`;
+          ? element`<li><input type="checkbox" class="checkbox" checked>
+          <s>${item.title}</s>
+          <button class="delete">x</button>
+          </li>`
+          : element`<li><input type="checkbox" class="checkbox">
+          ${item.title}
+          <button class="delete">x<button>
+          </li>`;
+        // チェックボックスのトグル処理はの変更なし
         const inputCheckboxElement = todoItemElement.querySelector(".checkbox");
         inputCheckboxElement.addEventListener("change", () => {
           // 指定したTodoアイテムの完了状態を反転させる
@@ -39,6 +47,14 @@ export class App {
             completed: !item.completed,
           });
         });
+        // 削除ボタン(X)がクリックされたときにTodoListModelからアイテムを削除する
+        const deleteButtonElement = todoItemElement.querySelector(".delete");
+        deleteButtonElement.addEventListener("click", () => {
+          this.#todoListModel.deleteTodo({
+            id: item.id,
+          });
+        });
+
         todoListElement.appendChild(todoItemElement);
       });
       // コンテナ要素の中身をTodoリストをまとめるList要素で上書きする
