@@ -4,8 +4,33 @@ import { TodoListView } from "./view/TodoListView.js";
 import { render } from "./view/html-util.js";
 
 export class App {
+  #todoListView = new TodoListView();
   // 1. TodoListModelの初期化
   #todoListModel = new TodoListModel();
+
+  /**
+   * Todoを追加するときに呼ばれるリスナー関数
+   * @param {string} title
+   */
+  handleAdd(title) {
+    this.#todoListModel.addTodo(new TodoItemModel({ title, completed: false }));
+  }
+
+  /**
+   * Todoの状態を更新したときに呼ばれるリスナー関数
+   * @param {id: number, completed: boolean}
+   */
+  handleUpdate({ id, completed }) {
+    this.#todoListModel.updateTodo({ id, completed });
+  }
+
+  /**
+   * Todoを削除したときに呼ばれるリスナー関数
+   * @param {id: number}
+   */
+  handleDelete({ id }) {
+    this.#todoListModel.deleteTodo({ id });
+  }
 
   mount() {
     // id="js-form" の form 要素を取得する（Todo入力フォーム）
@@ -27,13 +52,14 @@ export class App {
       const todoListView = new TodoListView();
       // todoItemに対応するTodoListViewを作成する
       const todoListElement = todoListView.createElement(todoItems, {
+        // Appに定義したリスナー関数を呼び出す
         // Todoアイテムが講師にベントを発生させたときに呼ばれる
         onUpdateTodo: ({ id, completed }) => {
-          this.#todoListModel.updateTodo({ id, completed });
+          this.handleUpdate({ id, completed });
         },
         // Todoアイテムが削除イベントを発生させたときに呼ばれる
         onDeleteTodo: ({ id }) => {
-          this.#todoListModel.deleteTodo({ id });
+          this.handleDelete({ id });
         },
       });
       // コンテナ要素の中身をTodoリストをまとめるList要素で上書きする
